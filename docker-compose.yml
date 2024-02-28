@@ -1,0 +1,53 @@
+version: '3.8'
+
+networks:
+  my-network:
+    driver: bridge
+
+services:
+  font:
+    image: nginx
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - /usr/local/xiangqin/dist:/
+    depends_on:
+      - backend
+    networks:
+      - my-network
+
+  backend:
+    image: xiangqin-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - /usr/local/xiangqin/config.yaml:/app/config.yaml
+    depends_on:
+      - postgres
+      - matching-service
+    networks:
+      - my-network
+
+  matching-service:
+    image: matching-service
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - my-network
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: wonderful123.
+      POSTGRES_DB: xiangqin-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+    networks:
+      - my-network

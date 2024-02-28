@@ -1,6 +1,12 @@
 server:
-  host: 0.0.0.0
+  host: "0.0.0.0"
   port: 8000
 postgres:
-  dns:
-  db:
+  dsn: "host=39.106.143.121 port=80 user=postgres password=wonderful123. dbname=xiangqin-db sslmode=disable"
+  maxIdleConns: 10
+  maxOpenConns: 100
+  connMaxIdleTime: 5
+  connMaxLifetime: 30
+logger:
+  path: tmp/
+  level: info
