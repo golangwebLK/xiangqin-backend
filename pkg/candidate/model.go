@@ -5,6 +5,7 @@ import "gorm.io/gorm"
 type PersonalInfo struct {
 	gorm.Model
 	RealName                  string   `gorm:"type:varchar(255);not null" json:"real_name"`
+	Gender                    string   `gorm:"type:varchar(255);not null" json:"gender"`
 	BirthYear                 int      `gorm:"not null" json:"birth_year"`
 	Telephone                 int      `gorm:"unique;not null" json:"telephone"`
 	WeChat                    string   `gorm:"type:varchar(255);unique;not null" json:"wechat"`

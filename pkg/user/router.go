@@ -13,7 +13,9 @@ func (userRouter *UserRouter) NewRouter(db *gorm.DB, router *bunrouter.Router) *
 	userService := NewUserService(db)
 	userApi := NewUserApi(userService)
 
-	router.GET("/user/", userApi.GetUser)
+	router.WithGroup("/api/v1", func(g *bunrouter.Group) {
+		g.GET("/user/", userApi.GetUser)
+	})
 
 	return router
 }
