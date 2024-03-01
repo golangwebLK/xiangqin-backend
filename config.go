@@ -24,14 +24,19 @@ type PostgresConfig struct {
 }
 
 type Logger struct {
-	Path  string `json:"path"`
-	Level string `json:"level"`
+	Path  string `yaml:"path"`
+	Level string `yaml:"level"`
+}
+
+type MatchService struct {
+	Server string `yaml:"server"`
 }
 
 type Config struct {
-	Listen   ListenConfig   `yaml:"server"`
-	Postgres PostgresConfig `yaml:"postgres"`
-	Logger   Logger         `yaml:"logger"`
+	Listen       ListenConfig   `yaml:"server"`
+	Postgres     PostgresConfig `yaml:"postgres"`
+	Logger       Logger         `yaml:"logger"`
+	MatchService MatchService   `yaml:"match-service"`
 }
 
 func GetConfig(path string) (Config, error) {

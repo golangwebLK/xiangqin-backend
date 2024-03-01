@@ -4,15 +4,16 @@ import (
 	"github.com/uptrace/bunrouter"
 	"github.com/uptrace/bunrouter/extra/reqlog"
 	"gorm.io/gorm"
+	xiangqin_backend "xiangqin-backend"
 	"xiangqin-backend/pkg/candidate"
 	"xiangqin-backend/pkg/user"
 )
 
 type Router interface {
-	NewRouter(db *gorm.DB, router *bunrouter.Router) *bunrouter.Router
+	NewRouter(db *gorm.DB, cfg *xiangqin_backend.Config, router *bunrouter.Router) *bunrouter.Router
 }
 
-func NewRouter(db *gorm.DB) *bunrouter.Router {
+func NewRouter(db *gorm.DB, cfg *xiangqin_backend.Config) *bunrouter.Router {
 	router := bunrouter.New(
 		bunrouter.Use(
 			reqlog.NewMiddleware(),
@@ -22,7 +23,7 @@ func NewRouter(db *gorm.DB) *bunrouter.Router {
 		&candidate.CandidateRouter{},
 	}
 	for _, r := range routers {
-		r.NewRouter(db, router)
+		r.NewRouter(db, cfg, router)
 	}
 	return router
 }

@@ -35,7 +35,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	router := pkg.NewRouter(db)
+	router := pkg.NewRouter(db, cfg)
 	server := &http.Server{
 		Addr:    cfg.Listen.Host + ":" + strconv.Itoa(cfg.Listen.Port),
 		Handler: router,

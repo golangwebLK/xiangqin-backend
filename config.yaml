@@ -10,3 +10,5 @@ postgres:
 logger:
   path: tmp/
   level: info
+match-service:
+  server: "http://127.0.0.1:3000"
