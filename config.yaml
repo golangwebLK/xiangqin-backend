@@ -11,4 +11,4 @@ logger:
   path: tmp/
   level: info
 match-service:
-  server: "http://127.0.0.1:3000"
+  server: "http://39.106.143.121:25480/"
