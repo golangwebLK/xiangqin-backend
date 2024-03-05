@@ -1,30 +1,50 @@
 package candidate
 
-import "gorm.io/gorm"
+import (
+	"encoding/json"
+	"gorm.io/gorm"
+)
 
 type PersonalInfo struct {
 	gorm.Model
-	RealName                  string      `gorm:"type:varchar(255);not null" json:"real_name"`
-	Gender                    string      `gorm:"type:varchar(255);not null" json:"gender"`
-	BirthYear                 int         `gorm:"not null" json:"birth_year"`
-	Telephone                 string      `gorm:"type:varchar(255);not null" json:"telephone"`
-	WeChat                    string      `gorm:"type:varchar(255);unique;not null" json:"wechat"`
-	Work                      int         `gorm:"not null" json:"work"`
-	School                    string      `gorm:"type:varchar(255);not null" json:"school"`
-	Qualification             string      `gorm:"type:varchar(255);not null" json:"qualification"`
-	CurrentPlace              int         `gorm:"not null" json:"current_place"`
-	AncestralHome             int         `gorm:"not null" json:"ancestral_home"`
-	Economic                  interface{} `gorm:"type:json;not null" json:"economic"`
-	Hobbies                   string      `gorm:"type:varchar(255);not null" json:"hobbies"`
-	Height                    int         `gorm:"not null" json:"height"`
-	Weight                    int         `gorm:"not null" json:"weight"`
-	OriginalFamilyComposition string      `gorm:"type:varchar(255);not null" json:"original_family_composition"`
-	ParentsSituation          string      `gorm:"type:varchar(255);not null" json:"parents_situation"`
-	Remarks                   string      `gorm:"type:varchar(255);not null" json:"remarks"`
+	PersonCode                string          `gorm:"type:varchar(255);unique;not null" json:"person_code"`
+	RealName                  string          `gorm:"type:varchar(255);not null" json:"real_name"`
+	Gender                    string          `gorm:"type:varchar(255);not null" json:"gender"`
+	BirthYear                 int             `gorm:"not null" json:"birth_year"`
+	Telephone                 string          `gorm:"type:varchar(255);not null" json:"telephone"`
+	WeChat                    string          `gorm:"type:varchar(255);not null" json:"wechat"`
+	Work                      int             `gorm:"not null" json:"work"`
+	School                    string          `gorm:"type:varchar(255);not null" json:"school"`
+	Qualification             string          `gorm:"type:varchar(255);not null" json:"qualification"`
+	CurrentPlace              int             `gorm:"not null" json:"current_place"`
+	AncestralHome             int             `gorm:"not null" json:"ancestral_home"`
+	Economic                  json.RawMessage `gorm:"type:json;not null" json:"economic"`
+	Hobbies                   string          `gorm:"type:varchar(255);not null" json:"hobbies"`
+	Height                    float64         `gorm:"not null" json:"height"`
+	Weight                    float64         `gorm:"not null" json:"weight"`
+	OriginalFamilyComposition string          `gorm:"type:varchar(255);not null" json:"original_family_composition"`
+	ParentsSituation          string          `gorm:"type:varchar(255);not null" json:"parents_situation"`
+	Remarks                   string          `gorm:"type:varchar(255);not null" json:"remarks"`
 }
 
 type EconomicInfo struct {
-	Savings string `json:"savings"`
-	House   string `json:"house"`
-	Car     string `json:"car"`
+	Savings    float64 `json:"savings"`
+	House      string  `json:"house"`
+	HouseMoney float64 `json:"house_money"`
+	Car        string  `json:"car"`
+	CarMoney   float64 `json:"car_money"`
+}
+
+type Candidate struct {
+	gorm.Model
+	PersonCode    string          `gorm:"type:varchar(255);unique;not null" json:"person_code"`
+	BirthYear     int             `gorm:"not null" json:"birth_year"`               // 实际年龄
+	Work          json.RawMessage `gorm:"type:json;not null" json:"work"`           // 按照包含关系，填入编号
+	Qualification int             `gorm:"not null" json:"qualification"`            // 学历编号1-7，
+	CurrentPlace  json.RawMessage `gorm:"type:json;not null" json:"current_place"`  // 按照包含关系，填入编号
+	AncestralHome json.RawMessage `gorm:"type:json;not null" json:"ancestral_home"` // 按照包含关系，填入编号
+	Economic      float64         `gorm:"not null" json:"economic"`                 // 实际财富
+	Height        float64         `gorm:"not null" json:"height"`                   // 实际身高
+	Weight        float64         `gorm:"not null" json:"weight"`                   // 实际体重
+	Score         float64         `gorm:"not null" json:"score"`
 }

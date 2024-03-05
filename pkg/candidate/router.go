@@ -16,6 +16,7 @@ func (candidateRouter *CandidateRouter) NewRouter(db *gorm.DB, cfg *xiangqin_bac
 
 	router.WithGroup("/api/v1", func(g *bunrouter.Group) {
 		g.POST("/candidate/", candidateApi.CreateCandidate)
+		g.POST("/match/", candidateApi.GetMatch)
 	})
 
 	return router
