@@ -2,6 +2,7 @@ package candidate
 
 import (
 	"encoding/json"
+
 	"gorm.io/gorm"
 )
 
@@ -47,4 +48,17 @@ type Candidate struct {
 	Height        float64         `gorm:"not null" json:"height"`                   // 实际身高
 	Weight        float64         `gorm:"not null" json:"weight"`                   // 实际体重
 	Score         float64         `gorm:"not null" json:"score"`
+}
+
+type CandidateReq struct {
+	PersonCode    string  `json:"person_code"`
+	BirthYear     int     `json:"birth_year"`     // 实际年龄
+	Work          []int   `json:"work"`           // 按照包含关系，填入编号
+	Qualification int     `json:"qualification"`  // 学历编号1-7，
+	CurrentPlace  []int   `json:"current_place"`  // 按照包含关系，填入编号
+	AncestralHome []int   `json:"ancestral_home"` // 按照包含关系，填入编号
+	Economic      float64 `json:"economic"`       // 实际财富
+	Height        float64 `json:"height"`         // 实际身高
+	Weight        float64 `json:"weight"`         // 实际体重
+	Score         float64 `json:"score"`
 }

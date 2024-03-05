@@ -3,11 +3,12 @@ package candidate
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/google/uuid"
+
 	xiangqin_backend "xiangqin-backend"
 	"xiangqin-backend/utils"
 
@@ -42,10 +43,10 @@ func (candidateService *CandidateService) SavePersonalInfo(
 	candidate := &Candidate{
 		PersonCode:    personalInfo.PersonCode,
 		BirthYear:     personalInfo.BirthYear,
-		Work:          get_work_or_area(work, personalInfo.Work),
+		Work:          get_work_or_area_save(work, personalInfo.Work),
 		Qualification: get_qualification_index_map(personalInfo.Qualification),
-		CurrentPlace:  get_work_or_area(area, personalInfo.CurrentPlace),
-		AncestralHome: get_work_or_area(area, personalInfo.AncestralHome),
+		CurrentPlace:  get_work_or_area_save(area, personalInfo.CurrentPlace),
+		AncestralHome: get_work_or_area_save(area, personalInfo.AncestralHome),
 		Economic:      get_economic(personalInfo.Economic),
 		Height:        personalInfo.Height,
 		Weight:        personalInfo.Weight,
@@ -59,8 +60,8 @@ func (candidateService *CandidateService) SavePersonalInfo(
 }
 
 type RequestData struct {
-	Candidate  Candidate          `json:"candidate"`
-	Candidates []Candidate        `json:"candidates"`
+	Candidate  CandidateReq       `json:"candidate"`
+	Candidates []CandidateReq     `json:"candidates"`
 	Attributes map[string]float64 `json:"attributes"`
 }
 
@@ -78,16 +79,48 @@ type DouArea struct {
 
 func (candidateService *CandidateService) MatchCandidate(
 	personalInfo PersonalInfo,
-	attributes_map map[string]float64) error {
+	attributes_map map[string]float64) *[]CandidateReq {
 	work, area := build_work_area_tree(candidateService.DB)
 	var candidates []Candidate
-	result := candidateService.DB.Limit(200).
+	result := candidateService.DB.Table("candidates").
+		Limit(5000).
 		Find(&candidates)
 	if result.Error != nil {
 		panic("failed to query database")
 	}
-	candidate := Candidate{
-		PersonCode:    personalInfo.PersonCode,
+	candidate_reqs := make([]CandidateReq, 0, 500)
+	for _, c := range candidates {
+		var works []int
+		err := json.Unmarshal(c.Work, &works)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var current_place []int
+		err = json.Unmarshal(c.CurrentPlace, &current_place)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var ancestral_home []int
+		err = json.Unmarshal(c.AncestralHome, &ancestral_home)
+		if err != nil {
+			log.Fatal(err)
+		}
+		candidate_req := CandidateReq{
+			PersonCode:    c.PersonCode,
+			BirthYear:     c.BirthYear,
+			Work:          works,
+			Qualification: c.Qualification,
+			CurrentPlace:  current_place,
+			AncestralHome: ancestral_home,
+			Economic:      get_economic(personalInfo.Economic),
+			Height:        personalInfo.Height,
+			Weight:        personalInfo.Weight,
+			Score:         0.0,
+		}
+		candidate_reqs = append(candidate_reqs, candidate_req)
+	}
+	candidate := CandidateReq{
+		PersonCode:    uuid.NewString(),
 		BirthYear:     personalInfo.BirthYear,
 		Work:          get_work_or_area(work, personalInfo.Work),
 		Qualification: get_qualification_index_map(personalInfo.Qualification),
@@ -98,56 +131,44 @@ func (candidateService *CandidateService) MatchCandidate(
 		Weight:        personalInfo.Weight,
 		Score:         0.0,
 	}
-	fmt.Println(candidate)
 	reqData := RequestData{
 		Candidate:  candidate,
-		Candidates: candidates,
+		Candidates: candidate_reqs,
 		Attributes: attributes_map,
 	}
 	jsonData, err := json.Marshal(reqData)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	req, err := http.NewRequest("POST",
-		candidateService.MatchServer+"/matching",
-		bytes.NewBuffer(jsonData))
+	resp, err := http.Post(candidateService.MatchServer+"/matching",
+		"application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	fmt.Println(resp.StatusCode)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	var i string
-	fmt.Println(body)
-	err = json.Unmarshal(body, &i)
+	var response Response
+	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Fatal("JSON unmarshalling failed: ", err)
-		return err
+		log.Fatal(err)
 	}
-	fmt.Println(i)
-	return nil
+	return &response.Data
 }
 
 type Response struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Data    any    `json:"data"`
+	Code    int            `json:"code"`
+	Message string         `json:"message"`
+	Data    []CandidateReq `json:"data"`
 }
 
-func get_economic(economic interface{}) float64 {
-	e, ok := economic.(EconomicInfo)
-	if !ok {
-		log.Println("economicStr 不是字符串类型")
-		return 0
+func get_economic(economic json.RawMessage) float64 {
+	var e EconomicInfo
+	err := json.Unmarshal(economic, &e)
+	if err != nil {
+		log.Println("get_economic函数有问题")
 	}
 	return e.Savings + e.CarMoney + e.HouseMoney
 }
@@ -172,15 +193,20 @@ func get_qualification_index_map(qualification string) int {
 	return 0
 }
 
-func get_work_or_area(node *utils.TreeNode, id int) json.RawMessage {
+func get_work_or_area(node *utils.TreeNode, id int) []int {
 	parent_id := utils.FindParentID(node, id)
 	parent1_id := utils.FindParentID(node, parent_id)
-	jsonData, err := json.Marshal([]int{parent1_id, parent_id, id})
-	if err != nil {
-		log.Println("JSON marshaling failed:", err)
-	}
+	return []int{parent1_id, parent_id, id}
+}
 
-	return jsonData
+func get_work_or_area_save(node *utils.TreeNode, id int) json.RawMessage {
+	parent_id := utils.FindParentID(node, id)
+	parent1_id := utils.FindParentID(node, parent_id)
+	marshal, err := json.Marshal([]int{parent1_id, parent_id, id})
+	if err != nil {
+		log.Println(err)
+	}
+	return marshal
 }
 
 func build_work_area_tree(db *gorm.DB) (*utils.TreeNode, *utils.TreeNode) {

@@ -2,8 +2,10 @@ package candidate
 
 import (
 	"encoding/json"
-	"github.com/uptrace/bunrouter"
 	"net/http"
+
+	"github.com/uptrace/bunrouter"
+
 	"xiangqin-backend/utils"
 )
 
@@ -121,28 +123,21 @@ func (cApi *CandidateApi) GetMatch(
 		Gender:                    personal.Gender,
 	}
 	attributes_map := map[string]float64{
-		"birth_year":                  15,
-		"work":                        15,
-		"qualification":               10,
-		"current_place":               5,
-		"ancestal_home":               2,
-		"economic":                    17,
-		"height":                      16,
-		"weight":                      16,
-		"original_family_composition": 5,
-		"parents_situation":           4,
+		"birth_year":                  15.0,
+		"work":                        15.0,
+		"qualification":               10.0,
+		"current_place":               5.0,
+		"ancestal_home":               2.0,
+		"economic":                    17.0,
+		"height":                      16.0,
+		"weight":                      16.0,
+		"original_family_composition": 5.0,
+		"parents_situation":           4.0,
 	}
-	err = cApi.Svc.MatchCandidate(dbPersonal, attributes_map)
-	if err != nil {
-		return bunrouter.JSON(rw, utils.ResponseData{
-			Status:  http.StatusInternalServerError,
-			Message: "匹配错误",
-			Data:    err,
-		})
-	}
+	data := cApi.Svc.MatchCandidate(dbPersonal, attributes_map)
 	return bunrouter.JSON(rw, utils.ResponseData{
 		Status:  http.StatusOK,
 		Message: "匹配成功",
-		Data:    nil,
+		Data:    data,
 	})
 }
