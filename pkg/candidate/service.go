@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sort"
 
 	"github.com/google/uuid"
 
@@ -78,12 +79,50 @@ type DouArea struct {
 	Name     string `gorm:"column:name"`
 }
 
+type PersonalInfoResult struct {
+	PersonalInfo PersonalInfo `json:"personalInfo"`
+	Score        float64      `json:"score"`
+}
+
+func MatchDataToShowData(candidateReq []CandidateReq, db *gorm.DB, gender string) (*[]PersonalInfoResult, error) {
+	UUIDCandidateMap := make(map[string]CandidateReq, len(candidateReq))
+	for _, c := range candidateReq {
+		UUIDCandidateMap[c.PersonCode] = c
+	}
+	var personalInfos []PersonalInfo
+	if db = db.Where("gender=?", gender).
+		Find(&personalInfos); db.Error != nil {
+		return nil, errors.New("数据库查询错误!")
+	}
+	personalInfoResults := make([]PersonalInfoResult, 0, len(personalInfos))
+	for _, p := range personalInfos {
+		c := UUIDCandidateMap[p.PersonCode]
+		personalInfoResult := PersonalInfoResult{
+			PersonalInfo: p,
+			Score:        c.Score,
+		}
+		personalInfoResults = append(personalInfoResults, personalInfoResult)
+	}
+	sort.Slice(personalInfoResults, func(i, j int) bool {
+		return personalInfoResults[i].Score > personalInfoResults[j].Score
+	})
+	return &personalInfoResults, nil
+}
+
 func (candidateService *CandidateService) MatchCandidate(
 	personalInfo PersonalInfo,
-	attributes_map map[string]float64) (*[]CandidateReq, error) {
+	attributes_map map[string]float64) (*[]PersonalInfoResult, error) {
 	work, area := build_work_area_tree(candidateService.DB)
 	var candidates []Candidate
-	result := candidateService.DB.Table("candidates").
+	var gender string
+	if personalInfo.Gender == "男" {
+		gender = "女"
+	} else {
+		gender = "男"
+	}
+	result := candidateService.DB.
+		Joins("LEFT JOIN personal_infos ON candidates.person_code = personal_infos.person_code").
+		Where("personal_infos.gender=?", gender).
 		Find(&candidates)
 	if result.Error != nil {
 		return nil, errors.New("查询数据库候选人失败!")
@@ -155,7 +194,14 @@ func (candidateService *CandidateService) MatchCandidate(
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &response.Data, nil
+	if response.Code != 200 {
+		return nil, errors.New("请求匹配服务失败")
+	}
+	data, err := MatchDataToShowData(response.Data, candidateService.DB, gender)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 type Response struct {

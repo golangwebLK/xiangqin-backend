@@ -47,6 +47,7 @@ type Candidate struct {
 	Economic      float64         `gorm:"not null" json:"economic"`                 // 实际财富
 	Height        float64         `gorm:"not null" json:"height"`                   // 实际身高
 	Weight        float64         `gorm:"not null" json:"weight"`                   // 实际体重
+	Gender        string          `gorm:"type:varchar(255);" json:"gender"`
 	Score         float64         `gorm:"not null" json:"score"`
 }
 

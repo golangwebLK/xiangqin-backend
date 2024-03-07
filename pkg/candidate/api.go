@@ -2,6 +2,7 @@ package candidate
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/uptrace/bunrouter"
@@ -30,7 +31,7 @@ type Personal struct {
 	CurrentPlace              int          `json:"current_place"`
 	AncestralHome             int          `json:"ancestral_home"`
 	Economic                  EconomicInfo `json:"economic"`
-	Hobbies                   string       `json:"hobbies"`
+	Hobbies                   []string     `json:"hobbies"`
 	Height                    float64      `json:"height"`
 	Weight                    float64      `json:"weight"`
 	OriginalFamilyComposition string       `json:"original_family_composition"`
@@ -65,7 +66,7 @@ func (cApi *CandidateApi) CreateCandidate(
 		CurrentPlace:              personal.CurrentPlace,
 		AncestralHome:             personal.AncestralHome,
 		Economic:                  economic,
-		Hobbies:                   personal.Hobbies,
+		Hobbies:                   fmt.Sprint(personal.Hobbies),
 		Height:                    personal.Height,
 		Weight:                    personal.Weight,
 		OriginalFamilyComposition: personal.OriginalFamilyComposition,
@@ -119,7 +120,7 @@ func (cApi *CandidateApi) GetMatch(
 		CurrentPlace:              req.Personal.CurrentPlace,
 		AncestralHome:             req.Personal.AncestralHome,
 		Economic:                  economic,
-		Hobbies:                   req.Personal.Hobbies,
+		Hobbies:                   fmt.Sprint(req.Personal.Hobbies),
 		Height:                    req.Personal.Height,
 		Weight:                    req.Personal.Weight,
 		OriginalFamilyComposition: req.Personal.OriginalFamilyComposition,
