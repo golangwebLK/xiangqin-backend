@@ -3,6 +3,7 @@ package candidate
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -79,14 +80,13 @@ type DouArea struct {
 
 func (candidateService *CandidateService) MatchCandidate(
 	personalInfo PersonalInfo,
-	attributes_map map[string]float64) *[]CandidateReq {
+	attributes_map map[string]float64) (*[]CandidateReq, error) {
 	work, area := build_work_area_tree(candidateService.DB)
 	var candidates []Candidate
 	result := candidateService.DB.Table("candidates").
-		Limit(5000).
 		Find(&candidates)
 	if result.Error != nil {
-		panic("failed to query database")
+		return nil, errors.New("查询数据库候选人失败!")
 	}
 	candidate_reqs := make([]CandidateReq, 0, 500)
 	for _, c := range candidates {
@@ -155,7 +155,7 @@ func (candidateService *CandidateService) MatchCandidate(
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &response.Data
+	return &response.Data, nil
 }
 
 type Response struct {

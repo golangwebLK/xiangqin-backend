@@ -88,53 +88,54 @@ func (cApi *CandidateApi) CreateCandidate(
 	})
 }
 
+type RequestMatch struct {
+	Personal      Personal           `json:"personal"`
+	AttributesMap map[string]float64 `json:"attributes_map"`
+}
+
 func (cApi *CandidateApi) GetMatch(
 	rw http.ResponseWriter,
 	r bunrouter.Request) error {
-	var personal Personal
-	if err := json.NewDecoder(r.Body).Decode(&personal); err != nil {
+	var req RequestMatch
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
 			Status:  http.StatusBadRequest,
 			Message: "请求参数错误",
 			Data:    err,
 		})
 	}
-	economic, err := json.Marshal(personal.Economic)
+	economic, err := json.Marshal(req.Personal.Economic)
 	if err != nil {
 		return err
 	}
 	dbPersonal := PersonalInfo{
-		RealName:                  personal.RealName,
-		BirthYear:                 personal.BirthYear,
-		Telephone:                 personal.Telephone,
-		WeChat:                    personal.WeChat,
-		Work:                      personal.Work,
-		School:                    personal.School,
-		Qualification:             personal.Qualification,
-		CurrentPlace:              personal.CurrentPlace,
-		AncestralHome:             personal.AncestralHome,
+		RealName:                  req.Personal.RealName,
+		BirthYear:                 req.Personal.BirthYear,
+		Telephone:                 req.Personal.Telephone,
+		WeChat:                    req.Personal.WeChat,
+		Work:                      req.Personal.Work,
+		School:                    req.Personal.School,
+		Qualification:             req.Personal.Qualification,
+		CurrentPlace:              req.Personal.CurrentPlace,
+		AncestralHome:             req.Personal.AncestralHome,
 		Economic:                  economic,
-		Hobbies:                   personal.Hobbies,
-		Height:                    personal.Height,
-		Weight:                    personal.Weight,
-		OriginalFamilyComposition: personal.OriginalFamilyComposition,
-		ParentsSituation:          personal.ParentsSituation,
-		Remarks:                   personal.Remarks,
-		Gender:                    personal.Gender,
+		Hobbies:                   req.Personal.Hobbies,
+		Height:                    req.Personal.Height,
+		Weight:                    req.Personal.Weight,
+		OriginalFamilyComposition: req.Personal.OriginalFamilyComposition,
+		ParentsSituation:          req.Personal.ParentsSituation,
+		Remarks:                   req.Personal.Remarks,
+		Gender:                    req.Personal.Gender,
 	}
-	attributes_map := map[string]float64{
-		"birth_year":                  15.0,
-		"work":                        15.0,
-		"qualification":               10.0,
-		"current_place":               5.0,
-		"ancestal_home":               2.0,
-		"economic":                    17.0,
-		"height":                      16.0,
-		"weight":                      16.0,
-		"original_family_composition": 5.0,
-		"parents_situation":           4.0,
+
+	data, err := cApi.Svc.MatchCandidate(dbPersonal, req.AttributesMap)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "匹配失败",
+			Data:    err,
+		})
 	}
-	data := cApi.Svc.MatchCandidate(dbPersonal, attributes_map)
 	return bunrouter.JSON(rw, utils.ResponseData{
 		Status:  http.StatusOK,
 		Message: "匹配成功",
