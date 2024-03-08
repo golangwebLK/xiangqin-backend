@@ -37,7 +37,6 @@ func run() error {
 	}
 	err = db.Migrator().AutoMigrate(
 		&candidate.PersonalInfo{},
-		&candidate.Candidate{},
 	)
 
 	if err != nil {

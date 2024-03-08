@@ -36,21 +36,6 @@ type EconomicInfo struct {
 	CarMoney   float64 `json:"car_money"`
 }
 
-type Candidate struct {
-	gorm.Model
-	PersonCode    string          `gorm:"type:varchar(255);unique;not null" json:"person_code"`
-	BirthYear     int             `gorm:"not null" json:"birth_year"`               // 实际年龄
-	Work          json.RawMessage `gorm:"type:json;not null" json:"work"`           // 按照包含关系，填入编号
-	Qualification int             `gorm:"not null" json:"qualification"`            // 学历编号1-7，
-	CurrentPlace  json.RawMessage `gorm:"type:json;not null" json:"current_place"`  // 按照包含关系，填入编号
-	AncestralHome json.RawMessage `gorm:"type:json;not null" json:"ancestral_home"` // 按照包含关系，填入编号
-	Economic      float64         `gorm:"not null" json:"economic"`                 // 实际财富
-	Height        float64         `gorm:"not null" json:"height"`                   // 实际身高
-	Weight        float64         `gorm:"not null" json:"weight"`                   // 实际体重
-	Gender        string          `gorm:"type:varchar(255);" json:"gender"`
-	Score         float64         `gorm:"not null" json:"score"`
-}
-
 type CandidateReq struct {
 	PersonCode    string  `json:"person_code"`
 	BirthYear     int     `json:"birth_year"`     // 实际年龄
