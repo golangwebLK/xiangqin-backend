@@ -9,6 +9,7 @@ type Company struct {
 	ContactTelephone string `json:"contactTelephone" gorm:"type:varchar(255);not null"`
 	CompanyTelephone string `json:"companyTelephone" gorm:"type:varchar(255);not null"`
 	Address          string `json:"address" gorm:"type:varchar(255);not null"`
-	Code             string `json:"code" gorm:"type:varchar(255);"`
+	Code             string `json:"code" gorm:"type:varchar(255);union;not null"`
+	IsUser           bool   `json:"isUser" gorm:"not null"`
 	Remarks          string `json:"remarks" gorm:"type:varchar(255);"`
 }

@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// 上线前重点检查，有些字段要有gorm:union;not null
 type PersonalInfo struct {
 	gorm.Model
 	PersonCode                string          `gorm:"type:varchar(255);unique;not null" json:"person_code"`
@@ -25,6 +26,7 @@ type PersonalInfo struct {
 	Weight                    float64         `gorm:"not null" json:"weight"`
 	OriginalFamilyComposition string          `gorm:"type:varchar(255);not null" json:"original_family_composition"`
 	ParentsSituation          string          `gorm:"type:varchar(255);not null" json:"parents_situation"`
+	CompanyCode               string          `json:"companyCode" gorm:"type:varchar(255);"`
 	Remarks                   string          `gorm:"type:varchar(255);not null" json:"remarks"`
 }
 

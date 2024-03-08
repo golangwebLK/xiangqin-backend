@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	xiangqin_backend "xiangqin-backend"
 	"xiangqin-backend/pkg/candidate"
+	"xiangqin-backend/pkg/company"
 	"xiangqin-backend/pkg/user"
 )
 
@@ -21,6 +22,7 @@ func NewRouter(db *gorm.DB, cfg *xiangqin_backend.Config) *bunrouter.Router {
 	routers := []Router{
 		&user.UserRouter{},
 		&candidate.CandidateRouter{},
+		&company.CompanyRouter{},
 	}
 	for _, r := range routers {
 		r.NewRouter(db, cfg, router)

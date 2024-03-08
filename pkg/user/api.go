@@ -18,3 +18,13 @@ func NewUserApi(svc *UserService) *UserApi {
 func (uApi *UserApi) GetUser(rw http.ResponseWriter, r bunrouter.Request) error {
 	return nil
 }
+
+func (uApi *UserApi) CreateUser(rw http.ResponseWriter, r bunrouter.Request) error {
+	return nil
+}
+func (uApi *UserApi) UpdateUser(rw http.ResponseWriter, r bunrouter.Request) error {
+	return nil
+}
+func (uApi *UserApi) DeleteUser(rw http.ResponseWriter, r bunrouter.Request) error {
+	return nil
+}

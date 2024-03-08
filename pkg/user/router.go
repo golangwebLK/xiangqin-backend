@@ -9,6 +9,7 @@ import (
 
 type UserRouter struct{}
 
+// _cfg作用是候选人模块请求算法用的
 func (userRouter *UserRouter) NewRouter(db *gorm.DB, _cfg *xiangqin_backend.Config, router *bunrouter.Router) *bunrouter.Router {
 	log.Println("userRouter register")
 	userService := NewUserService(db)
@@ -16,6 +17,9 @@ func (userRouter *UserRouter) NewRouter(db *gorm.DB, _cfg *xiangqin_backend.Conf
 
 	router.WithGroup("/api/v1", func(g *bunrouter.Group) {
 		g.GET("/user/", userApi.GetUser)
+		g.POST("/user/", userApi.CreateUser)
+		g.PUT("/user/", userApi.UpdateUser)
+		g.DELETE("/user/:id", userApi.DeleteUser)
 	})
 
 	return router
