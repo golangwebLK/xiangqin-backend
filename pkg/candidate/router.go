@@ -19,8 +19,8 @@ func (candidateRouter *CandidateRouter) NewRouter(db *gorm.DB, cfg *xiangqin_bac
 		g.POST("/match/", candidateApi.GetMatch)
 		g.GET("/candidate/", candidateApi.GetPersonalInfo)
 		g.GET("/candidate/:id", candidateApi.GetPersonalInfoByID)
-		g.PUT("/candidate/:id", candidateApi.UpdatePersonalInfo)
-		g.PUT("/candidateScore/:id", candidateApi.UpdatePersonalInfoAndScore)
+		g.PUT("/candidate/", candidateApi.UpdatePersonalInfo)
+		g.PUT("/candidateScore", candidateApi.UpdatePersonalInfoAndScore)
 		g.DELETE("/candidate/:id", candidateApi.DeletePersonalInfo)
 	})
 
