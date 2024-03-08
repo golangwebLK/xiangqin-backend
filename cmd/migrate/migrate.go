@@ -7,6 +7,8 @@ import (
 	"gorm.io/gorm/logger"
 	xiangqin_backend "xiangqin-backend"
 	"xiangqin-backend/pkg/candidate"
+	"xiangqin-backend/pkg/company"
+	"xiangqin-backend/pkg/user"
 )
 
 var (
@@ -37,6 +39,11 @@ func run() error {
 	}
 	err = db.Migrator().AutoMigrate(
 		&candidate.PersonalInfo{},
+		&candidate.PersonalLike{},
+		&user.User{},
+		&user.Content{},
+		&user.Permission{},
+		&company.Company{},
 	)
 
 	if err != nil {
