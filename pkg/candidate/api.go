@@ -143,3 +143,40 @@ func (cApi *CandidateApi) GetMatch(
 		Data:    data,
 	})
 }
+
+func (cApi *CandidateApi) GetPersonalInfo(
+	rw http.ResponseWriter,
+	r bunrouter.Request) error {
+	return nil
+}
+
+func (cApi *CandidateApi) GetPersonalInfoByID(
+	rw http.ResponseWriter,
+	r bunrouter.Request) error {
+	params := r.Params()
+	id, _ := params.Int64("id")
+	fmt.Println(id)
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "匹配成功",
+		Data:    nil,
+	})
+}
+
+func (cApi *CandidateApi) UpdatePersonalInfo(
+	rw http.ResponseWriter,
+	r bunrouter.Request) error {
+	return nil
+}
+
+func (cApi *CandidateApi) DeletePersonalInfo(
+	rw http.ResponseWriter,
+	r bunrouter.Request) error {
+	return nil
+}
+
+func (cApi *CandidateApi) UpdatePersonalInfoAndScore(
+	rw http.ResponseWriter,
+	r bunrouter.Request) error {
+	return nil
+}

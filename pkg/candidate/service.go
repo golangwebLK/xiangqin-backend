@@ -148,6 +148,9 @@ func (candidateService *CandidateService) MatchCandidate(
 	if err != nil {
 		log.Fatal(err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("请求算法匹配服务系统错误，相应状态:" + resp.Status)
+	}
 	var response Response
 	err = json.Unmarshal(body, &response)
 	if err != nil {
@@ -186,7 +189,7 @@ func get_qualification_index_map(qualification string) int {
 		return 2
 	case "高中":
 		return 3
-	case "专科":
+	case "大专":
 		return 4
 	case "本科":
 		return 5
