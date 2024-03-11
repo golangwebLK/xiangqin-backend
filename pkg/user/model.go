@@ -10,14 +10,15 @@ type User struct {
 	Username    string `json:"username" gorm:"type:varchar(255);not null"`
 	Password    string `json:"password" gorm:"type:varchar(255);not null"`
 	IsUser      bool   `json:"isUser" gorm:"not null"`
+	Role        string `json:"role" gorm:"not null"`
 	CompanyCode string `json:"companyCode" gorm:"type:varchar(255);not null"`
 	Remarks     string `json:"remarks" gorm:"type:varchar(255);"`
 }
 
 type Permission struct {
 	gorm.Model
-	UserID    int `json:"userID" gorm:"not null"`
-	ContentID int `json:"contentID" gorm:"not null"`
+	Role      string `json:"role" gorm:"not null"`
+	ContentID string `json:"contentID" gorm:"not null"`
 }
 
 type Content struct {
