@@ -85,8 +85,43 @@ func (cApi *CompanyApi) CreateCompany(rw http.ResponseWriter, r bunrouter.Reques
 	})
 }
 func (cApi *CompanyApi) UpdateCompany(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
+	var reqData Company
+	if err := json.NewDecoder(r.Body).Decode(&reqData); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "请求参数错误",
+			Data:    err,
+		})
+	}
+	if err := cApi.Svc.UpdateCompany(reqData); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "数据库更新错误",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "更新成功",
+		Data:    nil,
+	})
 }
 func (cApi *CompanyApi) DeleteCompany(rw http.ResponseWriter, r bunrouter.Request) error {
+	params := r.Params()
+	code, ok := params.Get("code")
+	if !ok {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "请求参数错误",
+			Data:    nil,
+		})
+	}
+	if err := cApi.Svc.DeleteCompany(code); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusOK,
+			Message: "删除完成",
+			Data:    nil,
+		})
+	}
 	return nil
 }

@@ -91,13 +91,45 @@ func (csvc *CompanyService) GetCompany(pageInt, pageSizeInt int, name, startTime
 		Error; err != nil {
 		return utils.PagingResp{}, err
 	}
+
+	codes := make([]string, 0, len(companys))
+	for _, company := range companys {
+		codes = append(codes, company.Code)
+	}
+	var users []user.User
+	if err = csvc.DB.Where("company_code in ?", codes).Find(&users).Error; err != nil {
+		return utils.PagingResp{}, err
+	}
+	var companyAndUsers []CompanyAndUser
+	codeUsersMap := make(map[string][]user.User, len(users)/10)
+	for _, u := range users {
+		if _, exist := codeUsersMap[u.CompanyCode]; exist {
+			codeUsersMap[u.CompanyCode] = append(codeUsersMap[u.CompanyCode], u)
+		} else {
+			codeUsersMap[u.CompanyCode] = []user.User{}
+		}
+	}
+	for _, company := range companys {
+		companyAndUser := CompanyAndUser{
+			Company: company,
+		}
+		if _, exist := codeUsersMap[company.Code]; exist {
+			companyAndUser.User = codeUsersMap[company.Code]
+		}
+		companyAndUsers = append(companyAndUsers, companyAndUser)
+	}
 	paging := utils.PagingResp{
 		Page:     pageInt,
 		PageSize: pageSizeInt,
 		Total:    total,
-		Data:     companys,
+		Data:     companyAndUsers,
 	}
 	return paging, nil
+}
+
+type CompanyAndUser struct {
+	Company Company     `json:"company"`
+	User    []user.User `json:"users"`
 }
 
 func calculateOffset(page, pageSize int, totalRecords int64) (int, error) {
@@ -111,4 +143,25 @@ func calculateOffset(page, pageSize int, totalRecords int64) (int, error) {
 	}
 
 	return offset, nil
+}
+
+func (csvc *CompanyService) UpdateCompany(company Company) error {
+	if err := csvc.DB.Updates(company).Where("id=?", company.ID).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (csvc *CompanyService) DeleteCompany(code string) error {
+	tx := csvc.DB.Begin()
+	if err := csvc.DB.Where("code=?", code).Delete(&Company{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := csvc.DB.Where("company_code=?", code).Delete(&user.User{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }

@@ -19,7 +19,7 @@ func (userRouter *CompanyRouter) NewRouter(db *gorm.DB, _cfg *xiangqin_backend.C
 		g.GET("/company/", companyApi.GetCompany)
 		g.POST("/company/", companyApi.CreateCompany)
 		g.PUT("/company/", companyApi.UpdateCompany)
-		g.DELETE("/company/:id", companyApi.DeleteCompany)
+		g.DELETE("/company/:code", companyApi.DeleteCompany)
 	})
 
 	return router
