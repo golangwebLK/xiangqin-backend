@@ -97,7 +97,7 @@ func (csvc *CompanyService) GetCompany(pageInt, pageSizeInt int, name, startTime
 		codes = append(codes, company.Code)
 	}
 	var users []user.User
-	if err = csvc.DB.Where("company_code in ?", codes).Find(&users).Error; err != nil {
+	if err = csvc.DB.Where("company_code in (?)", codes).Find(&users).Error; err != nil {
 		return utils.PagingResp{}, err
 	}
 	var companyAndUsers []CompanyAndUser

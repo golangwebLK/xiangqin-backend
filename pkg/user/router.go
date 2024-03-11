@@ -15,7 +15,11 @@ func (userRouter *UserRouter) NewRouter(db *gorm.DB, _cfg *xiangqin_backend.Conf
 	userService := NewUserService(db)
 	userApi := NewUserApi(userService)
 
+	router.POST("/api/v1/login", userApi.Login)
+	router.POST("/api/v1/exit", userApi.Exit)
+
 	router.WithGroup("/api/v1", func(g *bunrouter.Group) {
+		g.GET("/menu", userApi.GetMenu)
 		g.GET("/user/", userApi.GetUser)
 		g.POST("/user/", userApi.CreateUser)
 		g.PUT("/user/", userApi.UpdateUser)
