@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/uptrace/bunrouter"
 	"net/http"
+	"net/url"
+	"strconv"
 	"xiangqin-backend/utils"
 )
 
@@ -18,7 +20,34 @@ func NewUserApi(svc *CompanyService) *CompanyApi {
 }
 
 func (cApi *CompanyApi) GetCompany(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
+	queryValues, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "请求参数错误",
+			Data:    err,
+		})
+	}
+	pageInt, _ := strconv.Atoi(queryValues.Get("page"))
+	pageSizeInt, _ := strconv.Atoi(queryValues.Get("pageSize"))
+	name := queryValues.Get("name")
+	startTime := queryValues.Get("start_time")
+	endTime := queryValues.Get("end_time")
+
+	paging, err := cApi.Svc.GetCompany(pageInt, pageSizeInt, name, startTime, endTime)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "查询数据错误",
+			Data:    err,
+		})
+	}
+
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "查询成功",
+		Data:    paging,
+	})
 }
 
 type CreateCompanyRequestData struct {
