@@ -55,6 +55,9 @@ func run() error {
 	customerDataCode := uuid.NewString()
 	contents := [...]user.Content{
 		{
+			Model: gorm.Model{
+				ID: 1,
+			},
 			Name:       "系统管理",
 			Logo:       "icon-settings",
 			Code:       systemCode,
@@ -62,6 +65,9 @@ func run() error {
 			Target:     "",
 		},
 		{
+			Model: gorm.Model{
+				ID: 2,
+			},
 			Name:       "企业管理",
 			Logo:       "icon-storage",
 			Code:       companyCode,
@@ -69,6 +75,9 @@ func run() error {
 			Target:     "/company",
 		},
 		{
+			Model: gorm.Model{
+				ID: 3,
+			},
 			Name:       "用户管理",
 			Logo:       "icon-user",
 			Code:       userCode,
@@ -76,6 +85,9 @@ func run() error {
 			Target:     "/user",
 		},
 		{
+			Model: gorm.Model{
+				ID: 4,
+			},
 			Name:       "客户管理",
 			Logo:       "icon-user-group",
 			Code:       customerCode,
@@ -83,6 +95,9 @@ func run() error {
 			Target:     "",
 		},
 		{
+			Model: gorm.Model{
+				ID: 5,
+			},
 			Name:       "客户信息匹配",
 			Logo:       "icon-book",
 			Code:       customerDataCode,
@@ -96,18 +111,30 @@ func run() error {
 
 	permission := [...]user.Permission{
 		{
+			Model: gorm.Model{
+				ID: 1,
+			},
 			Role:      "SuperManager",
 			ContentID: companyCode,
 		},
 		{
+			Model: gorm.Model{
+				ID: 2,
+			},
 			Role:      "Manager",
 			ContentID: userCode,
 		},
 		{
+			Model: gorm.Model{
+				ID: 3,
+			},
 			Role:      "Manager",
 			ContentID: customerCode,
 		},
 		{
+			Model: gorm.Model{
+				ID: 4,
+			},
 			Role:      "User",
 			ContentID: userCode,
 		},
@@ -116,6 +143,9 @@ func run() error {
 		return err
 	}
 	superUser := user.User{
+		Model: gorm.Model{
+			ID: 1,
+		},
 		Name:        "金康网络科技",
 		Username:    "root",
 		Password:    "123456",
