@@ -149,8 +149,42 @@ func (uApi *UserApi) CreateUser(rw http.ResponseWriter, r bunrouter.Request) err
 	})
 }
 func (uApi *UserApi) UpdateUser(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
+	ctx := r.Request.Context()
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "请求字段错误",
+			Data:    err,
+		})
+	}
+	if err := uApi.Svc.UpdateUser(ctx, user); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "更新失败",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "更新成功",
+		Data:    nil,
+	})
 }
 func (uApi *UserApi) DeleteUser(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
+	ctx := r.Request.Context()
+	params := r.Params()
+	id, _ := params.Int64("id")
+	if err := uApi.Svc.DeleteUser(ctx, int(id)); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "删除失败",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "删除成功",
+		Data:    nil,
+	})
 }

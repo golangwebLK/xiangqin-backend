@@ -145,3 +145,19 @@ func (svc *UserService) GetUser(ctx context.Context, page, pageSize int, name st
 	}
 	return &users, nil
 }
+
+func (svc *UserService) UpdateUser(ctx context.Context, user User) error {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	if err := svc.DB.Updates(&user).Where("company_code=?", msg.CompanyCode).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc *UserService) DeleteUser(ctx context.Context, id int) error {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	if err := svc.DB.Where("company_code=? and id=?", msg.CompanyCode, id).Delete(&User{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
