@@ -3,11 +3,13 @@ package user
 import (
 	"context"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"strconv"
-	"time"
+
 	"xiangqin-backend/pkg/middleware"
 	"xiangqin-backend/utils"
 )
@@ -27,7 +29,7 @@ func NewUserService(db *gorm.DB, jwt *utils.JWT) *UserService {
 func (svc *UserService) ComparePassword(req LoginReq) (User, error) {
 	var user User
 	if err := svc.DB.
-		Where("username=?", req.Password).
+		Where("username=?", req.Username).
 		Find(&user).Error; err != nil {
 		return User{}, errors.New("没有此用户")
 	}
@@ -79,17 +81,17 @@ func buildTree(contents []Content) []*Content {
 	nodeMap := make(map[string]*Content)
 	var roots []*Content
 
-	for _, node := range contents {
-		node.Children = []*Content{}
-		nodeMap[node.Code] = &node
-		if node.ParentCode == "" {
-			roots = append(roots, &node)
+	for index, _ := range contents {
+		contents[index].Children = []*Content{}
+		nodeMap[contents[index].Code] = &contents[index]
+		if contents[index].ParentCode == "" {
+			roots = append(roots, &contents[index])
 		}
 	}
 
-	for _, node := range contents {
-		if parent, ok := nodeMap[node.ParentCode]; ok {
-			parent.Children = append(parent.Children, &node)
+	for index, _ := range contents {
+		if parent, ok := nodeMap[contents[index].ParentCode]; ok {
+			parent.Children = append(parent.Children, &contents[index])
 		}
 	}
 

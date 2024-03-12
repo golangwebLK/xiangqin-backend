@@ -1,9 +1,11 @@
 package company
 
 import (
+	"log"
+
 	"github.com/uptrace/bunrouter"
 	"gorm.io/gorm"
-	"log"
+
 	xiangqin_backend "xiangqin-backend"
 	"xiangqin-backend/pkg/middleware"
 	"xiangqin-backend/utils"
@@ -12,8 +14,8 @@ import (
 type CompanyRouter struct{}
 
 // NewRouter _cfg作用是候选人模块请求算法用的
-func (userRouter *CompanyRouter) NewRouter(db *gorm.DB, _cfg *xiangqin_backend.Config, router *bunrouter.Router, jwt *utils.JWT) *bunrouter.Router {
-	log.Println("userRouter register")
+func (companyRouter *CompanyRouter) NewRouter(db *gorm.DB, _cfg *xiangqin_backend.Config, router *bunrouter.Router, jwt *utils.JWT) *bunrouter.Router {
+	log.Println("companyRouter register")
 	companyService := NewUserService(db)
 	companyApi := NewUserApi(companyService)
 
