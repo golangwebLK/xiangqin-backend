@@ -3,6 +3,7 @@ package migrate
 import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -142,13 +143,14 @@ func run() error {
 	if err = db.Create(&permission).Error; err != nil {
 		return err
 	}
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("123456"), 12)
 	superUser := user.User{
 		Model: gorm.Model{
 			ID: 1,
 		},
 		Name:        "金康网络科技",
 		Username:    "root",
-		Password:    "123456",
+		Password:    string(passwordHash),
 		IsUser:      true,
 		Role:        "SuperManager",
 		CompanyCode: uuid.NewString(),

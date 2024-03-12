@@ -7,7 +7,7 @@ type User struct {
 	Name        string `json:"name" gorm:"type:varchar(255);not null"`
 	Birth       string `json:"birth" gorm:"type:varchar(255);"`
 	Telephone   string `json:"telephone" gorm:"type:varchar(255);"`
-	Username    string `json:"username" gorm:"type:varchar(255);not null"`
+	Username    string `json:"username" gorm:"type:varchar(255);union;not null"`
 	Password    string `json:"password" gorm:"type:varchar(255);not null"`
 	IsUser      bool   `json:"isUser" gorm:"not null"`
 	Role        string `json:"role" gorm:"not null"`
@@ -23,9 +23,10 @@ type Permission struct {
 
 type Content struct {
 	gorm.Model
-	Name       string `json:"name" gorm:"type:varchar(255);not null"`
-	Logo       string `json:"logo" gorm:"type:varchar(255);not null"`
-	Code       string `json:"code" gorm:"type:varchar(255);not null"`
-	ParentCode string `json:"parentCode" gorm:"type:varchar(255);"`
-	Target     string `json:"target" gorm:"type:varchar(255);"`
+	Name       string     `json:"name" gorm:"type:varchar(255);not null"`
+	Logo       string     `json:"logo" gorm:"type:varchar(255);not null"`
+	Code       string     `json:"code" gorm:"type:varchar(255);not null"`
+	ParentCode string     `json:"parentCode" gorm:"type:varchar(255);"`
+	Target     string     `json:"target" gorm:"type:varchar(255);"`
+	Children   []*Content `json:"children" gorm:"-"`
 }
