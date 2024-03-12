@@ -25,7 +25,7 @@ func (userRouter *UserRouter) NewRouter(db *gorm.DB, _cfg *xiangqinbackend.Confi
 			g.POST("/user/", userApi.CreateUser)
 			g.PUT("/user/", userApi.UpdateUser)
 			g.DELETE("/user/:id", userApi.DeleteUser)
-			g.POST("/api/v1/exit", userApi.Exit)
+			g.POST("/exit", userApi.Exit)
 		})
 
 	return router

@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"time"
-	"xiangqin-backend/pkg/company"
 	"xiangqin-backend/pkg/middleware"
 	"xiangqin-backend/utils"
 )
@@ -136,7 +135,7 @@ func (svc *UserService) GetUser(ctx context.Context, page, pageSize int, name st
 	if err := query.Count(&total).Error; err != nil {
 		return nil, err
 	}
-	offset, err := company.CalculateOffset(page, pageSize, total)
+	offset, err := CalculateOffset(page, pageSize, total)
 	if err != nil {
 		return nil, err
 	}
@@ -144,6 +143,18 @@ func (svc *UserService) GetUser(ctx context.Context, page, pageSize int, name st
 		return nil, err
 	}
 	return &users, nil
+}
+func CalculateOffset(page, pageSize int, totalRecords int64) (int, error) {
+	if page <= 0 {
+		page = 1
+	}
+
+	offset := (page - 1) * pageSize
+	if offset > int(totalRecords) {
+		return 0, errors.New("page out of range")
+	}
+
+	return offset, nil
 }
 
 func (svc *UserService) UpdateUser(ctx context.Context, user User) error {

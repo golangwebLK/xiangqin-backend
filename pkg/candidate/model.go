@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 上线前重点检查，有些字段要有gorm:union;not null
+// PersonalInfo 上线前重点检查，有些字段要有gorm:union;not null
 type PersonalInfo struct {
 	gorm.Model
 	PersonCode                string          `gorm:"type:varchar(255);unique;not null" json:"person_code"`
@@ -21,13 +21,13 @@ type PersonalInfo struct {
 	CurrentPlace              int             `gorm:"not null" json:"current_place"`
 	AncestralHome             int             `gorm:"not null" json:"ancestral_home"`
 	Economic                  json.RawMessage `gorm:"type:json;not null" json:"economic"`
-	Hobbies                   string          `gorm:"type:varchar(255);not null" json:"hobbies"`
+	Hobbies                   string          `gorm:"type:varchar(255);" json:"hobbies"`
 	Height                    float64         `gorm:"not null" json:"height"`
 	Weight                    float64         `gorm:"not null" json:"weight"`
-	OriginalFamilyComposition string          `gorm:"type:varchar(255);not null" json:"original_family_composition"`
-	ParentsSituation          string          `gorm:"type:varchar(255);not null" json:"parents_situation"`
-	CompanyCode               string          `json:"companyCode" gorm:"type:varchar(255);"`
-	Remarks                   string          `gorm:"type:varchar(255);not null" json:"remarks"`
+	OriginalFamilyComposition string          `gorm:"type:varchar(255);" json:"original_family_composition"`
+	ParentsSituation          string          `gorm:"type:varchar(255);" json:"parents_situation"`
+	CompanyCode               string          `json:"companyCode" gorm:"type:varchar(255);not null"`
+	Remarks                   string          `gorm:"type:varchar(255);" json:"remarks"`
 }
 
 type EconomicInfo struct {
@@ -60,10 +60,11 @@ type PersonalLike struct {
 	CurrentPlace              int             `gorm:"not null" json:"current_place"`
 	AncestralHome             int             `gorm:"not null" json:"ancestral_home"`
 	Economic                  json.RawMessage `gorm:"type:json;not null" json:"economic"`
-	Hobbies                   string          `gorm:"type:varchar(255);not null" json:"hobbies"`
+	Hobbies                   string          `gorm:"type:varchar(255);" json:"hobbies"`
 	Height                    float64         `gorm:"not null" json:"height"`
 	Weight                    float64         `gorm:"not null" json:"weight"`
-	OriginalFamilyComposition string          `gorm:"type:varchar(255);not null" json:"original_family_composition"`
-	ParentsSituation          string          `gorm:"type:varchar(255);not null" json:"parents_situation"`
-	Remarks                   string          `gorm:"type:varchar(255);not null" json:"remarks"`
+	OriginalFamilyComposition string          `gorm:"type:varchar(255);" json:"original_family_composition"`
+	ParentsSituation          string          `gorm:"type:varchar(255);" json:"parents_situation"`
+	CompanyCode               string          `json:"companyCode" gorm:"type:varchar(255);not null"`
+	Remarks                   string          `gorm:"type:varchar(255);" json:"remarks"`
 }

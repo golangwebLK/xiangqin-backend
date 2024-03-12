@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/uptrace/bunrouter"
 
@@ -40,45 +42,42 @@ type Personal struct {
 	Gender                    string       `json:"gender"`
 }
 
+type PersonLike struct {
+	BirthYear                 int          `json:"birth_year"`
+	Work                      int          `json:"work"`
+	Qualification             string       `json:"qualification"`
+	CurrentPlace              int          `json:"current_place"`
+	AncestralHome             int          `json:"ancestral_home"`
+	Economic                  EconomicInfo `json:"economic"`
+	Hobbies                   []string     `json:"hobbies"`
+	Height                    float64      `json:"height"`
+	Weight                    float64      `json:"weight"`
+	OriginalFamilyComposition string       `json:"original_family_composition"`
+	ParentsSituation          string       `json:"parents_situation"`
+	Remarks                   string       `json:"remarks"`
+}
+
+type CreatePersonReq struct {
+	Personal   Personal   `json:"personal"`
+	PersonLike PersonLike `json:"personLike"`
+}
+
 func (cApi *CandidateApi) CreateCandidate(
 	rw http.ResponseWriter,
 	r bunrouter.Request) error {
-	var personal Personal
-	if err := json.NewDecoder(r.Body).Decode(&personal); err != nil {
+	ctx := r.Request.Context()
+	var createPersonReq CreatePersonReq
+	if err := json.NewDecoder(r.Body).Decode(&createPersonReq); err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
 			Status:  http.StatusBadRequest,
 			Message: "请求参数错误",
 			Data:    err,
 		})
 	}
-	economic, err := json.Marshal(personal.Economic)
-	if err != nil {
-		return err
-	}
-	dbPersonal := PersonalInfo{
-		RealName:                  personal.RealName,
-		BirthYear:                 personal.BirthYear,
-		Telephone:                 personal.Telephone,
-		WeChat:                    personal.WeChat,
-		Work:                      personal.Work,
-		School:                    personal.School,
-		Qualification:             personal.Qualification,
-		CurrentPlace:              personal.CurrentPlace,
-		AncestralHome:             personal.AncestralHome,
-		Economic:                  economic,
-		Hobbies:                   fmt.Sprint(personal.Hobbies),
-		Height:                    personal.Height,
-		Weight:                    personal.Weight,
-		OriginalFamilyComposition: personal.OriginalFamilyComposition,
-		ParentsSituation:          personal.ParentsSituation,
-		Remarks:                   personal.Remarks,
-		Gender:                    personal.Gender,
-	}
-	err = cApi.Svc.SavePersonalInfo(dbPersonal)
-	if err != nil {
+	if err := cApi.Svc.SavePersonalInfo(ctx, createPersonReq); err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
 			Status:  http.StatusInternalServerError,
-			Message: "数据库保存错误",
+			Message: "保存错误",
 			Data:    err,
 		})
 	}
@@ -97,6 +96,7 @@ type RequestMatch struct {
 func (cApi *CandidateApi) GetMatch(
 	rw http.ResponseWriter,
 	r bunrouter.Request) error {
+	ctx := r.Request.Context()
 	var req RequestMatch
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
@@ -129,7 +129,7 @@ func (cApi *CandidateApi) GetMatch(
 		Gender:                    req.Personal.Gender,
 	}
 
-	data, err := cApi.Svc.MatchCandidate(dbPersonal, req.AttributesMap)
+	data, err := cApi.Svc.MatchCandidate(ctx, dbPersonal, req.AttributesMap)
 	if err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
 			Status:  http.StatusInternalServerError,
@@ -147,36 +147,129 @@ func (cApi *CandidateApi) GetMatch(
 func (cApi *CandidateApi) GetPersonalInfo(
 	rw http.ResponseWriter,
 	r bunrouter.Request) error {
-	return nil
+	ctx := r.Request.Context()
+	queryValues, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "请求参数错误",
+			Data:    err,
+		})
+	}
+	pageInt, _ := strconv.Atoi(queryValues.Get("page"))
+	pageSizeInt, _ := strconv.Atoi(queryValues.Get("pageSize"))
+	name := queryValues.Get("name")
+	personalinfos, err := cApi.Svc.GetPersonalInfo(ctx, pageInt, pageSizeInt, name)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "查询错误",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "查询成功",
+		Data:    personalinfos,
+	})
 }
 
 func (cApi *CandidateApi) GetPersonalInfoByID(
 	rw http.ResponseWriter,
 	r bunrouter.Request) error {
+	ctx := r.Request.Context()
 	params := r.Params()
-	id, _ := params.Int64("id")
-	fmt.Println(id)
+	id, err := params.Int64("id")
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "字段错误",
+			Data:    err,
+		})
+	}
+	personalInfo, err := cApi.Svc.GetPersonalInfoByID(ctx, int(id))
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "查询失败",
+			Data:    err,
+		})
+	}
 	return bunrouter.JSON(rw, utils.ResponseData{
 		Status:  http.StatusOK,
-		Message: "匹配成功",
-		Data:    nil,
+		Message: "查询成功",
+		Data:    personalInfo,
 	})
 }
 
 func (cApi *CandidateApi) UpdatePersonalInfo(
 	rw http.ResponseWriter,
 	r bunrouter.Request) error {
-	return nil
+	ctx := r.Request.Context()
+	var personalInfo PersonalInfo
+	if err := json.NewDecoder(r.Body).Decode(&personalInfo); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "字段错误",
+			Data:    err,
+		})
+	}
+	if err := cApi.Svc.UpdatePersonalInfo(ctx, personalInfo); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "修改失败",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "修改成功",
+		Data:    nil,
+	})
+}
+
+func (cApi *CandidateApi) UpdatePersonalLike(
+	rw http.ResponseWriter,
+	r bunrouter.Request) error {
+	ctx := r.Request.Context()
+	var personalLike PersonalLike
+	if err := json.NewDecoder(r.Body).Decode(&personalLike); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "字段错误",
+			Data:    err,
+		})
+	}
+	if err := cApi.Svc.UpdatePersonalLike(ctx, personalLike); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "修改失败",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "修改成功",
+		Data:    nil,
+	})
 }
 
 func (cApi *CandidateApi) DeletePersonalInfo(
 	rw http.ResponseWriter,
 	r bunrouter.Request) error {
-	return nil
-}
-
-func (cApi *CandidateApi) UpdatePersonalInfoAndScore(
-	rw http.ResponseWriter,
-	r bunrouter.Request) error {
-	return nil
+	ctx := r.Request.Context()
+	params := r.Params()
+	code, _ := params.Get("code")
+	if err := cApi.Svc.DeletePersonalInfo(ctx, code); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "删除失败",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "删除成功",
+		Data:    nil,
+	})
 }

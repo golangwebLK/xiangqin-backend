@@ -2,12 +2,15 @@ package candidate
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
+	"xiangqin-backend/pkg/middleware"
 
 	xiangqin_backend "xiangqin-backend"
 	"xiangqin-backend/utils"
@@ -28,15 +31,61 @@ func NewCandidateService(db *gorm.DB, cfg *xiangqin_backend.Config) *CandidateSe
 }
 
 func (candidateService *CandidateService) SavePersonalInfo(
-	personalInfo PersonalInfo) error {
-	newUUID, err := uuid.NewUUID()
+	ctx context.Context,
+	createPersonReq CreatePersonReq) error {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	UUID := uuid.NewString()
+	economic, err := json.Marshal(createPersonReq.Personal.Economic)
 	if err != nil {
 		return err
 	}
-	personalInfo.PersonCode = newUUID.String()
-	if err := candidateService.DB.Create(&personalInfo).Error; err != nil {
+	personalInfo := PersonalInfo{
+		PersonCode:                UUID,
+		RealName:                  createPersonReq.Personal.RealName,
+		BirthYear:                 createPersonReq.Personal.BirthYear,
+		Telephone:                 createPersonReq.Personal.Telephone,
+		WeChat:                    createPersonReq.Personal.WeChat,
+		Work:                      createPersonReq.Personal.Work,
+		School:                    createPersonReq.Personal.School,
+		Qualification:             createPersonReq.Personal.Qualification,
+		CurrentPlace:              createPersonReq.Personal.CurrentPlace,
+		AncestralHome:             createPersonReq.Personal.AncestralHome,
+		Economic:                  economic,
+		Hobbies:                   fmt.Sprint(createPersonReq.Personal.Hobbies),
+		Height:                    createPersonReq.Personal.Height,
+		Weight:                    createPersonReq.Personal.Weight,
+		OriginalFamilyComposition: createPersonReq.Personal.OriginalFamilyComposition,
+		ParentsSituation:          createPersonReq.Personal.ParentsSituation,
+		Remarks:                   createPersonReq.Personal.Remarks,
+		Gender:                    createPersonReq.Personal.Gender,
+		CompanyCode:               msg.CompanyCode,
+	}
+	personalLike := PersonalLike{
+		PersonCode:                UUID,
+		BirthYear:                 createPersonReq.PersonLike.BirthYear,
+		Work:                      createPersonReq.PersonLike.Work,
+		Qualification:             createPersonReq.PersonLike.Qualification,
+		CurrentPlace:              createPersonReq.PersonLike.CurrentPlace,
+		AncestralHome:             createPersonReq.PersonLike.AncestralHome,
+		Economic:                  economic,
+		Hobbies:                   fmt.Sprint(createPersonReq.PersonLike.Hobbies),
+		Height:                    createPersonReq.PersonLike.Height,
+		Weight:                    createPersonReq.PersonLike.Weight,
+		OriginalFamilyComposition: createPersonReq.PersonLike.OriginalFamilyComposition,
+		ParentsSituation:          createPersonReq.PersonLike.ParentsSituation,
+		CompanyCode:               msg.CompanyCode,
+		Remarks:                   createPersonReq.PersonLike.Remarks,
+	}
+	tx := candidateService.DB.Begin()
+	if err = candidateService.DB.Create(&personalInfo).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
+	if err = candidateService.DB.Create(&personalLike).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
 	return nil
 }
 
@@ -85,8 +134,10 @@ func MatchDataToShowData(
 }
 
 func (candidateService *CandidateService) MatchCandidate(
+	ctx context.Context,
 	personalInfo PersonalInfo,
 	attributes_map map[string]float64) (*[]PersonalInfoResult, error) {
+	msg := ctx.Value("msg").(*middleware.Msg)
 	work, area := build_work_area_tree(candidateService.DB)
 	var personalInfos []PersonalInfo
 	var gender string
@@ -96,7 +147,7 @@ func (candidateService *CandidateService) MatchCandidate(
 		gender = "男"
 	}
 	result := candidateService.DB.
-		Where("gender=?", gender).
+		Where("gender=? and company_code=?", gender, msg.CompanyCode).
 		Find(&personalInfos)
 	if result.Error != nil {
 		return nil, errors.New("查询数据库候选人失败!")
@@ -233,4 +284,77 @@ func build_work_area_tree(db *gorm.DB) (*utils.TreeNode, *utils.TreeNode) {
 			area.AreaId, area.ParentId, area.Name)
 	}
 	return work_root, area_root
+}
+
+func (svc *CandidateService) GetPersonalInfo(ctx context.Context, page, pageSize int, name string) (*[]PersonalInfo, error) {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	var personalInfos []PersonalInfo
+	query := svc.DB.Model(&PersonalInfo{}).Where("company_code=?", msg.CompanyCode)
+	if name != "" {
+		query = query.Where("real_name=?", "%"+name+"%")
+	}
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+	offset, err := CalculateOffset(page, pageSize, total)
+	if err != nil {
+		return nil, err
+	}
+	if err = query.Offset(offset).Limit(pageSize).Find(&personalInfos).Error; err != nil {
+		return nil, err
+	}
+	return &personalInfos, nil
+}
+func CalculateOffset(page, pageSize int, totalRecords int64) (int, error) {
+	if page <= 0 {
+		page = 1
+	}
+
+	offset := (page - 1) * pageSize
+	if offset > int(totalRecords) {
+		return 0, errors.New("page out of range")
+	}
+
+	return offset, nil
+}
+
+func (svc *CandidateService) GetPersonalInfoByID(ctx context.Context, id int) (PersonalInfo, error) {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	var personalInfo PersonalInfo
+	if err := svc.DB.Where("id=? and company_code=?", id, msg.CompanyCode).Find(&personalInfo).Error; err != nil {
+		return PersonalInfo{}, err
+	}
+	return personalInfo, nil
+}
+
+func (svc *CandidateService) UpdatePersonalInfo(ctx context.Context, info PersonalInfo) error {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	if err := svc.DB.Where("company_code=?", msg.CompanyCode).Updates(&info).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc *CandidateService) UpdatePersonalLike(ctx context.Context, like PersonalLike) error {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	if err := svc.DB.Where("company_code=?", msg.CompanyCode).Updates(&like).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc *CandidateService) DeletePersonalInfo(ctx context.Context, code string) error {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	tx := svc.DB.Begin()
+	if err := svc.DB.Where("company_code=? and person_code=?", msg.CompanyCode, code).Delete(&PersonalInfo{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := svc.DB.Where("company_code=? and person_code=?", msg.CompanyCode, code).Delete(&PersonalLike{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }
