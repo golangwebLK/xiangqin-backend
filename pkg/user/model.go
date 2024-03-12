@@ -7,7 +7,7 @@ type User struct {
 	Name        string `json:"name" gorm:"type:varchar(255);not null"`
 	Birth       string `json:"birth" gorm:"type:varchar(255);"`
 	Telephone   string `json:"telephone" gorm:"type:varchar(255);"`
-	Username    string `json:"username" gorm:"type:varchar(255);union;not null"`
+	Username    string `json:"username" gorm:"type:varchar(255);not null"`
 	Password    string `json:"password" gorm:"type:varchar(255);not null"`
 	IsUser      bool   `json:"isUser" gorm:"not null"`
 	Role        string `json:"role" gorm:"not null"`

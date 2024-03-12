@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
 	xiangqin_backend "xiangqin-backend"
 	"xiangqin-backend/pkg/candidate"
 	"xiangqin-backend/pkg/company"
@@ -130,14 +131,14 @@ func run() error {
 				ID: 3,
 			},
 			Role:      "Manager",
-			ContentID: customerCode,
+			ContentID: customerDataCode,
 		},
 		{
 			Model: gorm.Model{
 				ID: 4,
 			},
 			Role:      "User",
-			ContentID: userCode,
+			ContentID: customerDataCode,
 		},
 	}
 	if err = db.Create(&permission).Error; err != nil {

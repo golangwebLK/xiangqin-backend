@@ -108,13 +108,25 @@ func SearchContentByPermission(code string, idContentMap map[string]Content) []C
 }
 
 func (svc *UserService) CreateUser(ctx context.Context, rUser RequestUser) error {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
+	var users []User
+	if err := svc.DB.Where("company_code=?", msg.CompanyCode).Find(&users).Error; err != nil {
+		return err
+	}
+	usernames := make([]string, 0, len(users))
+	for _, user := range users {
+		usernames = append(usernames, user.Username)
+	}
+	if isDuplicate(usernames, rUser.Username) {
+		return errors.New("用户名重复")
+	}
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(rUser.Password), 12)
 	user := User{
 		Name:        rUser.Name,
 		Birth:       rUser.Birth,
 		Telephone:   rUser.Telephone,
 		Username:    rUser.Username,
-		Password:    rUser.Password,
+		Password:    string(passwordHash),
 		IsUser:      rUser.IsUser,
 		Role:        rUser.Role,
 		CompanyCode: msg.CompanyCode,
@@ -124,6 +136,14 @@ func (svc *UserService) CreateUser(ctx context.Context, rUser RequestUser) error
 		return err
 	}
 	return nil
+}
+func isDuplicate(arr []string, value string) bool {
+	checker := make(map[string]bool)
+	for _, v := range arr {
+		checker[v] = true
+	}
+	_, exists := checker[value]
+	return exists
 }
 
 func (svc *UserService) GetUser(ctx context.Context, page, pageSize int, name string) (*[]User, error) {

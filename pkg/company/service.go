@@ -2,9 +2,12 @@ package company
 
 import (
 	"errors"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+
 	"xiangqin-backend/pkg/user"
 	"xiangqin-backend/utils"
 )
@@ -38,10 +41,11 @@ func (csvc *CompanyService) CreateCompanyAndUser(createCompanyRequestData Create
 		return err
 	}
 	//根据公司信息创建企业根用户
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(createCompanyRequestData.RootPassword), 12)
 	rootUser := user.User{
 		Name:        "默认姓名",
 		Username:    createCompanyRequestData.RootUsername,
-		Password:    createCompanyRequestData.RootPassword,
+		Password:    string(passwordHash),
 		IsUser:      true,
 		Role:        "Manager",
 		CompanyCode: code,
