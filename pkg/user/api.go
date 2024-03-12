@@ -71,11 +71,17 @@ func (uApi *UserApi) Login(rw http.ResponseWriter, r bunrouter.Request) error {
 	})
 }
 func (uApi *UserApi) Exit(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
-}
-
-func (uApi *UserApi) GetMenu(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
+	http.SetCookie(rw, &http.Cookie{
+		Name:    "xq-session",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Now().Add(-1 * time.Hour),
+	})
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "退出成功",
+		Data:    nil,
+	})
 }
 
 func (uApi *UserApi) GetUser(rw http.ResponseWriter, r bunrouter.Request) error {
