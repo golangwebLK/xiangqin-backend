@@ -10,7 +10,7 @@ import (
 )
 
 type Msg struct {
-	companyCode string
+	CompanyCode string
 	ID          int
 }
 
@@ -39,7 +39,7 @@ func HTTPJwt(jwt *utils.JWT) bunrouter.MiddlewareFunc {
 				return err
 			}
 			msg := Msg{
-				companyCode: ids[0],
+				CompanyCode: ids[0],
 				ID:          id,
 			}
 			ctx := context.WithValue(context.TODO(), "msg", msg)

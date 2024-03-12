@@ -60,7 +60,7 @@ func (csvc *CompanyService) GetCompany(pageInt, pageSizeInt int, name, startTime
 	var companys []Company
 	query := csvc.DB.Model(&Company{})
 	if name != "" {
-		query = query.Where("company_name=?", name)
+		query = query.Where("company_name like ?", "%"+name+"%")
 	}
 	if startTime != "" {
 		startT, err := time.Parse("2006-01-02 15:04:05", startTime)
@@ -80,7 +80,7 @@ func (csvc *CompanyService) GetCompany(pageInt, pageSizeInt int, name, startTime
 	if err := query.Count(&total).Error; err != nil {
 		return utils.PagingResp{}, err
 	}
-	offset, err := calculateOffset(pageInt, pageSizeInt, total)
+	offset, err := CalculateOffset(pageInt, pageSizeInt, total)
 	if err != nil {
 		return utils.PagingResp{}, err
 	}
@@ -132,7 +132,7 @@ type CompanyAndUser struct {
 	User    []user.User `json:"users"`
 }
 
-func calculateOffset(page, pageSize int, totalRecords int64) (int, error) {
+func CalculateOffset(page, pageSize int, totalRecords int64) (int, error) {
 	if page <= 0 {
 		page = 1
 	}

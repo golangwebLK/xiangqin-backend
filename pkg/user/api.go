@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/uptrace/bunrouter"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 	"xiangqin-backend/utils"
 )
@@ -85,23 +87,66 @@ func (uApi *UserApi) Exit(rw http.ResponseWriter, r bunrouter.Request) error {
 }
 
 func (uApi *UserApi) GetUser(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
+	ctx := r.Request.Context()
+	queryValues, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "字段错误",
+			Data:    err,
+		})
+	}
+	pageInt, _ := strconv.Atoi(queryValues.Get("page"))
+	pageSizeInt, _ := strconv.Atoi(queryValues.Get("pageSize"))
+	name := queryValues.Get("name")
+	users, err := uApi.Svc.GetUser(ctx, pageSizeInt, pageInt, name)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "查询错误",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "查询成功",
+		Data:    users,
+	})
 }
 
 type RequestUser struct {
-	Name        string `json:"name"`
-	Birth       string `json:"birth"`
-	Telephone   string `json:"telephone"`
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	IsUser      bool   `json:"isUser"`
-	Role        string `json:"role"`
-	CompanyCode string `json:"companyCode"`
-	Remarks     string `json:"remarks"`
+	Name      string `json:"name"`
+	Birth     string `json:"birth"`
+	Telephone string `json:"telephone"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	IsUser    bool   `json:"isUser"`
+	Role      string `json:"role"`
+	Remarks   string `json:"remarks"`
 }
 
 func (uApi *UserApi) CreateUser(rw http.ResponseWriter, r bunrouter.Request) error {
-	return nil
+	ctx := r.Request.Context()
+	var rUser RequestUser
+	if err := json.NewDecoder(r.Body).Decode(&rUser); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "请求字段错误",
+			Data:    err,
+		})
+	}
+	if err := uApi.Svc.CreateUser(ctx, rUser); err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "用户保存失败",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "保存成功",
+		Data:    nil,
+	})
 }
 func (uApi *UserApi) UpdateUser(rw http.ResponseWriter, r bunrouter.Request) error {
 	return nil

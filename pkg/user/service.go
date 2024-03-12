@@ -1,12 +1,15 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"strconv"
 	"time"
+	"xiangqin-backend/pkg/company"
+	"xiangqin-backend/pkg/middleware"
 	"xiangqin-backend/utils"
 )
 
@@ -101,4 +104,44 @@ func SearchContentByPermission(code string, idContentMap map[string]Content) []C
 	contents := SearchContentByPermission(content.ParentCode, idContentMap)
 	contents = append(contents, content)
 	return contents
+}
+
+func (svc *UserService) CreateUser(ctx context.Context, rUser RequestUser) error {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	user := User{
+		Name:        rUser.Name,
+		Birth:       rUser.Birth,
+		Telephone:   rUser.Telephone,
+		Username:    rUser.Username,
+		Password:    rUser.Password,
+		IsUser:      rUser.IsUser,
+		Role:        rUser.Role,
+		CompanyCode: msg.CompanyCode,
+		Remarks:     rUser.Remarks,
+	}
+	if err := svc.DB.Create(&user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc *UserService) GetUser(ctx context.Context, page, pageSize int, name string) (*[]User, error) {
+	msg := ctx.Value("msg").(*middleware.Msg)
+	var users []User
+	query := svc.DB.Model(&User{}).Where("company_code=?", msg.CompanyCode)
+	if name != "" {
+		query = query.Where("name like ?", "%"+name+"%")
+	}
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+	offset, err := company.CalculateOffset(page, pageSize, total)
+	if err != nil {
+		return nil, err
+	}
+	if err = query.Offset(offset).Limit(pageSize).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return &users, nil
 }
