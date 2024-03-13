@@ -10,8 +10,9 @@ import (
 type PersonalInfo struct {
 	gorm.Model
 	PersonCode                string          `gorm:"type:varchar(255);unique;not null" json:"person_code"`
+	Picture                   string          `gorm:"type:varchar(255);" json:"picture"`
 	RealName                  string          `gorm:"type:varchar(255);not null" json:"real_name"`
-	Gender                    string          `gorm:"type:varchar(255);not null" json:"gender"`
+	Gender                    string          `gorm:"type:varchar(255);not null;index:idx_company_gender" json:"gender"`
 	BirthYear                 int             `gorm:"not null" json:"birth_year"`
 	Telephone                 string          `gorm:"type:varchar(255);not null" json:"telephone"`
 	WeChat                    string          `gorm:"type:varchar(255);not null" json:"wechat"`
@@ -26,7 +27,7 @@ type PersonalInfo struct {
 	Weight                    float64         `gorm:"not null" json:"weight"`
 	OriginalFamilyComposition string          `gorm:"type:varchar(255);" json:"original_family_composition"`
 	ParentsSituation          string          `gorm:"type:varchar(255);" json:"parents_situation"`
-	CompanyCode               string          `json:"companyCode" gorm:"type:varchar(255);not null"`
+	CompanyCode               string          `json:"companyCode" gorm:"type:varchar(255);not null;index:idx_company_gender"`
 	Remarks                   string          `gorm:"type:varchar(255);" json:"remarks"`
 }
 

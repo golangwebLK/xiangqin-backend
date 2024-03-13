@@ -147,7 +147,7 @@ func isDuplicate(arr []string, value string) bool {
 }
 
 func (svc *UserService) GetUser(ctx context.Context, page, pageSize int, name string) (*[]User, error) {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	var users []User
 	query := svc.DB.Model(&User{}).Where("company_code=?", msg.CompanyCode)
 	if name != "" {
@@ -180,7 +180,7 @@ func CalculateOffset(page, pageSize int, totalRecords int64) (int, error) {
 }
 
 func (svc *UserService) UpdateUser(ctx context.Context, user User) error {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	if err := svc.DB.Updates(&user).Where("company_code=?", msg.CompanyCode).Error; err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (svc *UserService) UpdateUser(ctx context.Context, user User) error {
 }
 
 func (svc *UserService) DeleteUser(ctx context.Context, id int) error {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	if err := svc.DB.Where("company_code=? and id=?", msg.CompanyCode, id).Delete(&User{}).Error; err != nil {
 		return err
 	}

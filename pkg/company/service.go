@@ -111,6 +111,7 @@ func (csvc *CompanyService) GetCompany(pageInt, pageSizeInt int, name, startTime
 			codeUsersMap[u.CompanyCode] = append(codeUsersMap[u.CompanyCode], u)
 		} else {
 			codeUsersMap[u.CompanyCode] = []user.User{}
+			codeUsersMap[u.CompanyCode] = append(codeUsersMap[u.CompanyCode], u)
 		}
 	}
 	for _, company := range companys {

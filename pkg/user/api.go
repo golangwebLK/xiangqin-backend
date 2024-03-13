@@ -99,7 +99,7 @@ func (uApi *UserApi) GetUser(rw http.ResponseWriter, r bunrouter.Request) error 
 	pageInt, _ := strconv.Atoi(queryValues.Get("page"))
 	pageSizeInt, _ := strconv.Atoi(queryValues.Get("pageSize"))
 	name := queryValues.Get("name")
-	users, err := uApi.Svc.GetUser(ctx, pageSizeInt, pageInt, name)
+	users, err := uApi.Svc.GetUser(ctx, pageInt, pageSizeInt, name)
 	if err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
 			Status:  http.StatusInternalServerError,

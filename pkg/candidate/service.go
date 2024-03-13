@@ -33,7 +33,7 @@ func NewCandidateService(db *gorm.DB, cfg *xiangqin_backend.Config) *CandidateSe
 func (candidateService *CandidateService) SavePersonalInfo(
 	ctx context.Context,
 	createPersonReq CreatePersonReq) error {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	UUID := uuid.NewString()
 	economic, err := json.Marshal(createPersonReq.Personal.Economic)
 	if err != nil {
@@ -42,6 +42,7 @@ func (candidateService *CandidateService) SavePersonalInfo(
 	personalInfo := PersonalInfo{
 		PersonCode:                UUID,
 		RealName:                  createPersonReq.Personal.RealName,
+		Picture:                   createPersonReq.Personal.Picture,
 		BirthYear:                 createPersonReq.Personal.BirthYear,
 		Telephone:                 createPersonReq.Personal.Telephone,
 		WeChat:                    createPersonReq.Personal.WeChat,
@@ -287,7 +288,7 @@ func build_work_area_tree(db *gorm.DB) (*utils.TreeNode, *utils.TreeNode) {
 }
 
 func (svc *CandidateService) GetPersonalInfo(ctx context.Context, page, pageSize int, name string) (*[]PersonalInfo, error) {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	var personalInfos []PersonalInfo
 	query := svc.DB.Model(&PersonalInfo{}).Where("company_code=?", msg.CompanyCode)
 	if name != "" {
@@ -320,7 +321,7 @@ func CalculateOffset(page, pageSize int, totalRecords int64) (int, error) {
 }
 
 func (svc *CandidateService) GetPersonalInfoByID(ctx context.Context, id int) (PersonalInfo, error) {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	var personalInfo PersonalInfo
 	if err := svc.DB.Where("id=? and company_code=?", id, msg.CompanyCode).Find(&personalInfo).Error; err != nil {
 		return PersonalInfo{}, err
@@ -329,7 +330,7 @@ func (svc *CandidateService) GetPersonalInfoByID(ctx context.Context, id int) (P
 }
 
 func (svc *CandidateService) UpdatePersonalInfo(ctx context.Context, info PersonalInfo) error {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	if err := svc.DB.Where("company_code=?", msg.CompanyCode).Updates(&info).Error; err != nil {
 		return err
 	}
@@ -337,7 +338,7 @@ func (svc *CandidateService) UpdatePersonalInfo(ctx context.Context, info Person
 }
 
 func (svc *CandidateService) UpdatePersonalLike(ctx context.Context, like PersonalLike) error {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	if err := svc.DB.Where("company_code=?", msg.CompanyCode).Updates(&like).Error; err != nil {
 		return err
 	}
@@ -345,7 +346,7 @@ func (svc *CandidateService) UpdatePersonalLike(ctx context.Context, like Person
 }
 
 func (svc *CandidateService) DeletePersonalInfo(ctx context.Context, code string) error {
-	msg := ctx.Value("msg").(*middleware.Msg)
+	msg := ctx.Value("msg").(middleware.Msg)
 	tx := svc.DB.Begin()
 	if err := svc.DB.Where("company_code=? and person_code=?", msg.CompanyCode, code).Delete(&PersonalInfo{}).Error; err != nil {
 		tx.Rollback()

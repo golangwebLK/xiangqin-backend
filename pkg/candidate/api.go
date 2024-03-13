@@ -24,6 +24,7 @@ func NewCandidateApi(svc *CandidateService) *CandidateApi {
 
 type Personal struct {
 	RealName                  string       `json:"real_name"`
+	Picture                   string       `json:"picture"`
 	BirthYear                 int          `json:"birth_year"`
 	Telephone                 string       `json:"telephone"`
 	WeChat                    string       `json:"we_chat"`
