@@ -3,8 +3,10 @@ package candidate
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/uptrace/bunrouter"
@@ -272,5 +274,47 @@ func (cApi *CandidateApi) DeletePersonalInfo(
 		Status:  http.StatusOK,
 		Message: "删除成功",
 		Data:    nil,
+	})
+}
+
+func (cApi *CandidateApi) UploadImage(rw http.ResponseWriter, r bunrouter.Request) error {
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "文件大小不能超过20M",
+			Data:    err,
+		})
+	}
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusBadRequest,
+			Message: "获取文件失败",
+			Data:    err,
+		})
+	}
+	defer file.Close()
+	tempFile, err := os.CreateTemp("uploads", "upload-*.jpg")
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "创建文件失败",
+			Data:    err,
+		})
+	}
+	defer tempFile.Close()
+	_, err = io.Copy(tempFile, file)
+	if err != nil {
+		return bunrouter.JSON(rw, utils.ResponseData{
+			Status:  http.StatusInternalServerError,
+			Message: "文件写入失败",
+			Data:    err,
+		})
+	}
+	return bunrouter.JSON(rw, utils.ResponseData{
+		Status:  http.StatusOK,
+		Message: "上传成功",
+		Data:    handler.Filename,
 	})
 }

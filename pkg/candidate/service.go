@@ -287,7 +287,12 @@ func build_work_area_tree(db *gorm.DB) (*utils.TreeNode, *utils.TreeNode) {
 	return work_root, area_root
 }
 
-func (svc *CandidateService) GetPersonalInfo(ctx context.Context, page, pageSize int, name string) (*[]PersonalInfo, error) {
+type PersonResp struct {
+	PersonalInfo PersonalInfo
+	PersonalLike PersonalLike
+}
+
+func (svc *CandidateService) GetPersonalInfo(ctx context.Context, page, pageSize int, name string) (*utils.PagingResp, error) {
 	msg := ctx.Value("msg").(middleware.Msg)
 	var personalInfos []PersonalInfo
 	query := svc.DB.Model(&PersonalInfo{}).Where("company_code=?", msg.CompanyCode)
@@ -305,7 +310,33 @@ func (svc *CandidateService) GetPersonalInfo(ctx context.Context, page, pageSize
 	if err = query.Offset(offset).Limit(pageSize).Find(&personalInfos).Error; err != nil {
 		return nil, err
 	}
-	return &personalInfos, nil
+	personCodes := make([]string, 0, len(personalInfos))
+	personCodePersonalInfoMap := make(map[string]PersonalInfo, len(personalInfos))
+	for _, personalInfo := range personalInfos {
+		personCodes = append(personCodes, personalInfo.PersonCode)
+		personCodePersonalInfoMap[personalInfo.PersonCode] = personalInfo
+	}
+	var personalLikes []PersonalLike
+	if err = svc.DB.
+		Where("company_code=? and person_code in (?)", msg.CompanyCode, personCodes).
+		Find(&personalLikes).Error; err != nil {
+		return nil, err
+	}
+	personResps := make([]PersonResp, 0, len(personalInfos))
+	for _, personalLike := range personalLikes {
+		personResp := PersonResp{
+			PersonalInfo: personCodePersonalInfoMap[personalLike.PersonCode],
+			PersonalLike: personalLike,
+		}
+		personResps = append(personResps, personResp)
+	}
+	paging := utils.PagingResp{
+		Page:     page,
+		PageSize: pageSize,
+		Total:    total,
+		Data:     personResps,
+	}
+	return &paging, nil
 }
 func CalculateOffset(page, pageSize int, totalRecords int64) (int, error) {
 	if page <= 0 {
@@ -320,13 +351,21 @@ func CalculateOffset(page, pageSize int, totalRecords int64) (int, error) {
 	return offset, nil
 }
 
-func (svc *CandidateService) GetPersonalInfoByID(ctx context.Context, id int) (PersonalInfo, error) {
+func (svc *CandidateService) GetPersonalInfoByID(ctx context.Context, id int) (PersonResp, error) {
 	msg := ctx.Value("msg").(middleware.Msg)
 	var personalInfo PersonalInfo
 	if err := svc.DB.Where("id=? and company_code=?", id, msg.CompanyCode).Find(&personalInfo).Error; err != nil {
-		return PersonalInfo{}, err
+		return PersonResp{}, err
 	}
-	return personalInfo, nil
+	var personalLike PersonalLike
+	if err := svc.DB.Where("company_code=? and person_code=?", msg.CompanyCode, personalInfo.PersonCode).Find(&personalLike).Error; err != nil {
+		return PersonResp{}, err
+	}
+	personResp := PersonResp{
+		PersonalLike: personalLike,
+		PersonalInfo: personalInfo,
+	}
+	return personResp, nil
 }
 
 func (svc *CandidateService) UpdatePersonalInfo(ctx context.Context, info PersonalInfo) error {

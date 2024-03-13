@@ -194,3 +194,17 @@ func (svc *UserService) DeleteUser(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func (svc *UserService) UpdatePassword(ctx context.Context, r LoginReq) error {
+	msg := ctx.Value("msg").(middleware.Msg)
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), 12)
+
+	if err := svc.DB.Model(&User{}).
+		Where("company_code=? and username=?", msg.CompanyCode, r.Username).
+		Updates(map[string]interface{}{
+			"password": passwordHash,
+		}).Error; err != nil {
+		return err
+	}
+	return nil
+}
