@@ -13,3 +13,4 @@ logger:
 match-service:
   server: "http://39.106.143.121:25480"
 #  server: "http://127.0.0.1:3000"
+image: ./images/

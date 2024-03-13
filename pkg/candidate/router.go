@@ -14,7 +14,7 @@ type CandidateRouter struct{}
 func (candidateRouter *CandidateRouter) NewRouter(db *gorm.DB, cfg *xiangqin_backend.Config, router *bunrouter.Router, jwt *utils.JWT) *bunrouter.Router {
 	log.Println("candidateRouter register")
 	candidateService := NewCandidateService(db, cfg)
-	candidateApi := NewCandidateApi(candidateService)
+	candidateApi := NewCandidateApi(candidateService, cfg)
 
 	router.Use(middleware.HTTPJwt(jwt)).
 		WithGroup("/api/v1", func(g *bunrouter.Group) {
@@ -26,6 +26,7 @@ func (candidateRouter *CandidateRouter) NewRouter(db *gorm.DB, cfg *xiangqin_bac
 			g.PUT("/candidate_like/", candidateApi.UpdatePersonalLike)
 			g.DELETE("/candidate/:code", candidateApi.DeletePersonalInfo)
 			g.POST("/uploadImage", candidateApi.UploadImage)
+			g.GET("/speech/:name", candidateApi.Speech())
 		})
 
 	return router

@@ -37,6 +37,7 @@ type Config struct {
 	Postgres     PostgresConfig `yaml:"postgres"`
 	Logger       Logger         `yaml:"logger"`
 	MatchService MatchService   `yaml:"match-service"`
+	Image        string         `yaml:"image"`
 }
 
 func GetConfig(path string) (Config, error) {

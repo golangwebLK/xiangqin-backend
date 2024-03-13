@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
+	xiangqin_backend "xiangqin-backend"
 
 	"github.com/uptrace/bunrouter"
 
@@ -16,11 +19,13 @@ import (
 
 type CandidateApi struct {
 	Svc *CandidateService
+	Cfg *xiangqin_backend.Config
 }
 
-func NewCandidateApi(svc *CandidateService) *CandidateApi {
+func NewCandidateApi(svc *CandidateService, cfg *xiangqin_backend.Config) *CandidateApi {
 	return &CandidateApi{
 		Svc: svc,
+		Cfg: cfg,
 	}
 }
 
@@ -286,7 +291,7 @@ func (cApi *CandidateApi) UploadImage(rw http.ResponseWriter, r bunrouter.Reques
 			Data:    err,
 		})
 	}
-	file, handler, err := r.FormFile("image")
+	file, _, err := r.FormFile("image")
 	if err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
 			Status:  http.StatusBadRequest,
@@ -295,7 +300,17 @@ func (cApi *CandidateApi) UploadImage(rw http.ResponseWriter, r bunrouter.Reques
 		})
 	}
 	defer file.Close()
-	tempFile, err := os.CreateTemp("uploads", "upload-*.jpg")
+
+	if _, err := os.Stat(cApi.Cfg.Image); os.IsNotExist(err) {
+		if err := os.MkdirAll(cApi.Cfg.Image, 0755); err != nil {
+			return bunrouter.JSON(rw, utils.ResponseData{
+				Status:  http.StatusInternalServerError,
+				Message: "创建目录失败",
+				Data:    err.Error(), // 输出错误信息的更多细节
+			})
+		}
+	}
+	tempFile, err := os.CreateTemp(cApi.Cfg.Image, "upload-*.jpg")
 	if err != nil {
 		return bunrouter.JSON(rw, utils.ResponseData{
 			Status:  http.StatusInternalServerError,
@@ -312,9 +327,19 @@ func (cApi *CandidateApi) UploadImage(rw http.ResponseWriter, r bunrouter.Reques
 			Data:    err,
 		})
 	}
+	name := strings.Split(tempFile.Name(), "/")[2]
 	return bunrouter.JSON(rw, utils.ResponseData{
 		Status:  http.StatusOK,
 		Message: "上传成功",
-		Data:    handler.Filename,
+		Data:    name,
 	})
+}
+
+func (cApi *CandidateApi) Speech() bunrouter.HandlerFunc {
+	return func(w http.ResponseWriter, req bunrouter.Request) error {
+		filename := req.Param("name")
+		http.ServeFile(w, req.Request, filepath.Join(cApi.Cfg.Image, filename))
+		return nil
+
+	}
 }
